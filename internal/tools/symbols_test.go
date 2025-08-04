@@ -103,18 +103,22 @@ func TestFlattenDocumentSymbols(t *testing.T) {
 		assert.Equal(t, "TestClass", results[0].Name)
 		assert.Equal(t, "Class", results[0].Kind)
 		assert.Equal(t, "", results[0].Container)
+		assert.Equal(t, "", results[0].Parent)
 		
 		assert.Equal(t, "method1", results[1].Name)
 		assert.Equal(t, "Method", results[1].Kind)
 		assert.Equal(t, "TestClass", results[1].Container)
+		assert.Equal(t, "TestClass", results[1].Parent)
 		
 		assert.Equal(t, "field1", results[2].Name)
 		assert.Equal(t, "Field", results[2].Kind)
 		assert.Equal(t, "TestClass", results[2].Container)
+		assert.Equal(t, "TestClass", results[2].Parent)
 		
 		assert.Equal(t, "function1", results[3].Name)
 		assert.Equal(t, "Function", results[3].Kind)
 		assert.Equal(t, "", results[3].Container)
+		assert.Equal(t, "", results[3].Parent)
 	})
 
 	t.Run("Filter by Class only", func(t *testing.T) {
@@ -207,6 +211,35 @@ func TestConvertSymbolInformation(t *testing.T) {
 		results := convertSymbolInformation(symbols, filter)
 		assert.Len(t, results, 0)
 	})
+}
+
+func TestParentFieldFunctionality(t *testing.T) {
+	symbols := []symbolResult{
+		{
+			Name:      "TestClass",
+			Kind:      "Class",
+			Location:  "test.py:1:1",
+			Container: "",
+			Parent:    "",
+			Detail:    "",
+		},
+		{
+			Name:      "test_method",
+			Kind:      "Method",
+			Location:  "test.py:5:5",
+			Container: "TestClass",
+			Parent:    "TestClass",
+			Detail:    "",
+		},
+	}
+	
+	result := formatSymbolResults(symbols)
+	
+	// Verify Parent field is displayed when not empty
+	assert.Contains(t, result, "Parent: TestClass")
+	
+	// Verify Container field is still there
+	assert.Contains(t, result, "Container: TestClass")
 }
 
 func TestFormatSymbolResults(t *testing.T) {
