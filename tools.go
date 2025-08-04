@@ -411,7 +411,7 @@ func (s *mcpServer) registerTools() error {
 		}
 
 		coreLogger.Debug("Executing symbols with types: %v, file: %v, namePattern: %v", symbolTypes, filePath, namePattern)
-		text, err := tools.GetSymbols(s.ctx, s.lspClient, symbolTypes, filePath, namePattern)
+		text, err := tools.GetSymbolsWithProvided(s.ctx, s.lspClient, symbolTypes, kindsProvided, filePath, namePattern)
 		if err != nil {
 			coreLogger.Error("Failed to get symbols: %v", err)
 			return mcp.NewToolResultError(fmt.Sprintf("failed to get symbols: %v", err)), nil

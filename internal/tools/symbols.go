@@ -11,6 +11,10 @@ import (
 )
 
 func GetSymbols(ctx context.Context, client *lsp.Client, symbolTypes []string, filePath *string, namePattern *string) (string, error) {
+	return GetSymbolsWithProvided(ctx, client, symbolTypes, false, filePath, namePattern)
+}
+
+func GetSymbolsWithProvided(ctx context.Context, client *lsp.Client, symbolTypes []string, kindsProvided bool, filePath *string, namePattern *string) (string, error) {
 	toolsLogger.Debug("Getting symbols with types: %v, file: %v, namePattern: %v", symbolTypes, filePath, namePattern)
 
 	var nameRegex *regexp.Regexp
@@ -23,8 +27,8 @@ func GetSymbols(ctx context.Context, client *lsp.Client, symbolTypes []string, f
 	}
 
 	symbolKindFilter := make(map[protocol.SymbolKind]bool)
-	if len(symbolTypes) == 0 {
-		// No kinds provided or empty array - use defaults
+	if !kindsProvided {
+		// No kinds parameter provided - use defaults
 		defaultTypes := []string{"Class", "Interface", "Enum", "Struct", "Function", "Method", "Property", "Field"}
 		for _, symbolType := range defaultTypes {
 			kind := parseSymbolKind(symbolType)
@@ -32,6 +36,9 @@ func GetSymbols(ctx context.Context, client *lsp.Client, symbolTypes []string, f
 				symbolKindFilter[kind] = true
 			}
 		}
+	} else if len(symbolTypes) == 0 {
+		// Empty array provided - allow all kinds (no filter)
+		// symbolKindFilter remains empty, which means no filtering
 	} else {
 		// Specific kinds provided - filter by them
 		for _, symbolType := range symbolTypes {
