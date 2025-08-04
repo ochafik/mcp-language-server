@@ -26,7 +26,7 @@ func TestGetSymbols(t *testing.T) {
 	}{
 		{
 			name:         "DocumentAllSymbols",
-			symbolTypes:  []string{},
+			symbolTypes:  []string{"Class", "Interface", "Enum", "Struct", "Function", "Method", "Property", "Field"},
 			filePath:     stringPtr(suite.WorkspaceDir + "/main.py"),
 			snapshotName: "document_all",
 			expectedText: "Found",
@@ -118,7 +118,7 @@ func TestGetSymbolsWithNamePattern(t *testing.T) {
 	filePath := suite.WorkspaceDir + "/main.py"
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			result, err := tools.GetSymbols(ctx, suite.Client, []string{}, &filePath, &test.namePattern)
+			result, err := tools.GetSymbols(ctx, suite.Client, []string{"Class", "Interface", "Enum", "Struct", "Function", "Method", "Property", "Field"}, &filePath, &test.namePattern)
 
 			if err != nil {
 				t.Fatalf("GetSymbols failed: %v", err)
