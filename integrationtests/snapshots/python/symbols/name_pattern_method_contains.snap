@@ -1,0 +1,18 @@
+Found 4 symbols:
+
+**test_method** (Method)
+/TEST_OUTPUT/workspace/main.py:31:5
+  Container: TestClass
+
+**static_method** (Method)
+/TEST_OUTPUT/workspace/main.py:43:5
+  Container: TestClass
+
+**base_method** (Method)
+/TEST_OUTPUT/workspace/main.py:65:5
+  Container: BaseClass
+
+**derived_method** (Method)
+/TEST_OUTPUT/workspace/main.py:73:5
+  Container: DerivedClass
+

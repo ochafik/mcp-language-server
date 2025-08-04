@@ -1,0 +1,9 @@
+Found 2 symbols:
+
+**test_function** (Function)
+/TEST_OUTPUT/workspace/main.py:6:1
+
+**test_method** (Method)
+/TEST_OUTPUT/workspace/main.py:31:5
+  Container: TestClass
+

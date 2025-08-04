@@ -363,6 +363,60 @@ func (s *mcpServer) registerTools() error {
 		return mcp.NewToolResultText(text), nil
 	})
 
+	symbolsTool := mcp.NewTool("symbols",
+		mcp.WithDescription("List symbols from a file or workspace, optionally filtered by symbol types and name pattern."),
+		mcp.WithArray("types",
+			mcp.Description("Array of symbol types to filter by (e.g. ['Class', 'Function', 'Method']). If empty, defaults to ['Class', 'Interface', 'Enum', 'Struct', 'Function', 'Method', 'Property', 'Field']."),
+			mcp.Items(map[string]any{
+				"type": "string",
+				"enum": []string{
+					"File", "Module", "Namespace", "Package", "Class", "Method",
+					"Property", "Field", "Constructor", "Enum", "Interface", "Function",
+					"Variable", "Constant", "String", "Number", "Boolean", "Array",
+					"Object", "Key", "Null", "EnumMember", "Struct", "Event",
+					"Operator", "TypeParameter",
+				},
+			}),
+		),
+		mcp.WithString("filePath",
+			mcp.Description("Optional file path. If provided, uses textDocument/documentSymbol for the specific file. If not provided, uses workspace/symbol to search the entire workspace."),
+		),
+		mcp.WithString("namePattern",
+			mcp.Description("Optional regex pattern to filter symbol names (e.g. '^test.*' for symbols starting with 'test')."),
+		),
+	)
+
+	s.mcpServer.AddTool(symbolsTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		var symbolTypes []string
+		if typesArg, ok := request.Params.Arguments["types"]; ok {
+			if typesArray, ok := typesArg.([]any); ok {
+				for _, typeItem := range typesArray {
+					if typeStr, ok := typeItem.(string); ok {
+						symbolTypes = append(symbolTypes, typeStr)
+					}
+				}
+			}
+		}
+
+		var filePath *string
+		if filePathArg, ok := request.Params.Arguments["filePath"].(string); ok {
+			filePath = &filePathArg
+		}
+
+		var namePattern *string
+		if namePatternArg, ok := request.Params.Arguments["namePattern"].(string); ok {
+			namePattern = &namePatternArg
+		}
+
+		coreLogger.Debug("Executing symbols with types: %v, file: %v, namePattern: %v", symbolTypes, filePath, namePattern)
+		text, err := tools.GetSymbols(s.ctx, s.lspClient, symbolTypes, filePath, namePattern)
+		if err != nil {
+			coreLogger.Error("Failed to get symbols: %v", err)
+			return mcp.NewToolResultError(fmt.Sprintf("failed to get symbols: %v", err)), nil
+		}
+		return mcp.NewToolResultText(text), nil
+	})
+
 	coreLogger.Info("Successfully registered all MCP tools")
 	return nil
 }

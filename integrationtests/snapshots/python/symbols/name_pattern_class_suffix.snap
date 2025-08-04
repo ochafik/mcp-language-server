@@ -1,0 +1,11 @@
+Found 3 symbols:
+
+**TestClass** (Class)
+/TEST_OUTPUT/workspace/main.py:18:1
+
+**BaseClass** (Class)
+/TEST_OUTPUT/workspace/main.py:62:1
+
+**DerivedClass** (Class)
+/TEST_OUTPUT/workspace/main.py:70:1
+
