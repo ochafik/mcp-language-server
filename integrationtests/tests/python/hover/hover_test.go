@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/isaacphi/mcp-language-server/integrationtests/tests/common"
-	"github.com/isaacphi/mcp-language-server/integrationtests/tests/python/internal"
-	"github.com/isaacphi/mcp-language-server/internal/tools"
+	"github.com/ochafik/mcp-language-server/integrationtests/tests/common"
+	"github.com/ochafik/mcp-language-server/integrationtests/tests/python/internal"
+	"github.com/ochafik/mcp-language-server/internal/tools"
 )
 
 // TestHover tests hover functionality with the Python language server

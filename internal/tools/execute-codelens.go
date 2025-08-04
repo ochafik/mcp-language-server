@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/isaacphi/mcp-language-server/internal/lsp"
-	"github.com/isaacphi/mcp-language-server/internal/protocol"
+	"github.com/ochafik/mcp-language-server/internal/lsp"
+	"github.com/ochafik/mcp-language-server/internal/protocol"
 )
 
 // ExecuteCodeLens executes a specific code lens command from a file.

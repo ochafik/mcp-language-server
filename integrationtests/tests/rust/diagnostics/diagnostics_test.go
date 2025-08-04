@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/isaacphi/mcp-language-server/integrationtests/tests/common"
-	"github.com/isaacphi/mcp-language-server/integrationtests/tests/rust/internal"
-	"github.com/isaacphi/mcp-language-server/internal/protocol"
-	"github.com/isaacphi/mcp-language-server/internal/tools"
+	"github.com/ochafik/mcp-language-server/integrationtests/tests/common"
+	"github.com/ochafik/mcp-language-server/integrationtests/tests/rust/internal"
+	"github.com/ochafik/mcp-language-server/internal/protocol"
+	"github.com/ochafik/mcp-language-server/internal/tools"
 )
 
 // TestDiagnostics tests diagnostics functionality with the Rust language server

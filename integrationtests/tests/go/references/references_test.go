@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/isaacphi/mcp-language-server/integrationtests/tests/common"
-	"github.com/isaacphi/mcp-language-server/integrationtests/tests/go/internal"
-	"github.com/isaacphi/mcp-language-server/internal/tools"
+	"github.com/ochafik/mcp-language-server/integrationtests/tests/common"
+	"github.com/ochafik/mcp-language-server/integrationtests/tests/go/internal"
+	"github.com/ochafik/mcp-language-server/internal/tools"
 )
 
 // TestFindReferences tests the FindReferences tool with Go symbols

@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/isaacphi/mcp-language-server/integrationtests/tests/common"
+	"github.com/ochafik/mcp-language-server/integrationtests/tests/common"
 )
 
 // GetTestSuite returns a test suite for Clangd language server tests

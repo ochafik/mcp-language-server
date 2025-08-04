@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/isaacphi/mcp-language-server/internal/logging"
-	"github.com/isaacphi/mcp-language-server/internal/lsp"
-	"github.com/isaacphi/mcp-language-server/internal/protocol"
+	"github.com/ochafik/mcp-language-server/internal/logging"
+	"github.com/ochafik/mcp-language-server/internal/lsp"
+	"github.com/ochafik/mcp-language-server/internal/protocol"
 )
 
 // Create a logger for the watcher component

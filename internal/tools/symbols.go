@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/isaacphi/mcp-language-server/internal/lsp"
-	"github.com/isaacphi/mcp-language-server/internal/protocol"
+	"github.com/ochafik/mcp-language-server/internal/lsp"
+	"github.com/ochafik/mcp-language-server/internal/protocol"
 )
 
 func GetSymbols(ctx context.Context, client *lsp.Client, symbolTypes []string, filePath *string, namePattern *string) (string, error) {
