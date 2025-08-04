@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
@@ -20,10 +21,23 @@ import (
 // Create a logger for the core component
 var coreLogger = logging.NewLogger(logging.Core)
 
+// stringSlice implements flag.Value for collecting multiple string flags
+type stringSlice []string
+
+func (s *stringSlice) String() string {
+	return strings.Join(*s, ",")
+}
+
+func (s *stringSlice) Set(value string) error {
+	*s = append(*s, value)
+	return nil
+}
+
 type config struct {
-	workspaceDir string
-	lspCommand   string
-	lspArgs      []string
+	workspaceDir     string
+	lspCommand       string
+	lspArgs          []string
+	preopenPatterns  []string
 }
 
 type mcpServer struct {
@@ -37,9 +51,14 @@ type mcpServer struct {
 
 func parseConfig() (*config, error) {
 	cfg := &config{}
+	var patterns stringSlice
+	
 	flag.StringVar(&cfg.workspaceDir, "workspace", "", "Path to workspace directory")
 	flag.StringVar(&cfg.lspCommand, "lsp", "", "LSP command to run (args should be passed after --)")
+	flag.Var(&patterns, "preopen-files-matching", "Glob pattern for files to pre-open (can be specified multiple times, e.g., --preopen-files-matching '*.h' --preopen-files-matching '*.hpp')")
 	flag.Parse()
+	
+	cfg.preopenPatterns = []string(patterns)
 
 	// Get remaining args after -- as LSP arguments
 	cfg.lspArgs = flag.Args()
@@ -69,6 +88,105 @@ func parseConfig() (*config, error) {
 	}
 
 	return cfg, nil
+}
+
+// findFilesToPreopen discovers files matching the given glob patterns
+func findFilesToPreopen(workspaceDir string, patterns []string, maxFiles int) ([]string, error) {
+	if len(patterns) == 0 {
+		return nil, nil
+	}
+	
+	var allFiles []string
+	seenFiles := make(map[string]bool)
+	
+	for _, pattern := range patterns {
+		// Make pattern relative to workspace directory
+		fullPattern := filepath.Join(workspaceDir, pattern)
+		
+		matches, err := filepath.Glob(fullPattern)
+		if err != nil {
+			coreLogger.Error("Failed to glob pattern %s: %v", pattern, err)
+			continue
+		}
+		
+		for _, match := range matches {
+			// Convert to relative path and avoid duplicates
+			relPath, err := filepath.Rel(workspaceDir, match)
+			if err != nil {
+				continue
+			}
+			
+			// Skip if already seen or if it's a directory
+			if seenFiles[relPath] {
+				continue
+			}
+			
+			if info, err := os.Stat(match); err != nil || info.IsDir() {
+				continue
+			}
+			
+			seenFiles[relPath] = true
+			allFiles = append(allFiles, match)
+			
+			// Respect maxFiles limit
+			if len(allFiles) >= maxFiles {
+				coreLogger.Info("Reached maximum file limit (%d), stopping file discovery", maxFiles)
+				return allFiles, nil
+			}
+		}
+	}
+	
+	return allFiles, nil
+}
+
+// preopenFiles opens files in the LSP client to trigger indexing
+func (s *mcpServer) preopenFiles() error {
+	if len(s.config.preopenPatterns) == 0 {
+		return nil
+	}
+	
+	coreLogger.Info("Pre-opening files matching patterns: %v", s.config.preopenPatterns)
+	
+	// Find files to open (limit to 300 to avoid overwhelming clangd)
+	filesToOpen, err := findFilesToPreopen(s.config.workspaceDir, s.config.preopenPatterns, 300)
+	if err != nil {
+		return fmt.Errorf("failed to find files to preopen: %v", err)
+	}
+	
+	if len(filesToOpen) == 0 {
+		coreLogger.Info("No files found matching patterns")
+		return nil
+	}
+	
+	coreLogger.Info("Pre-opening %d files for LSP indexing", len(filesToOpen))
+	
+	// Open files with timeout
+	ctx, cancel := context.WithTimeout(s.ctx, 30*time.Second)
+	defer cancel()
+	
+	openedCount := 0
+	for _, filePath := range filesToOpen {
+		if err := s.lspClient.OpenFile(ctx, filePath); err != nil {
+			coreLogger.Error("Failed to open file %s: %v", filePath, err)
+			continue
+		}
+		openedCount++
+		
+		// Add small delay to avoid overwhelming the LSP server
+		if openedCount%10 == 0 {
+			time.Sleep(100 * time.Millisecond)
+		}
+	}
+	
+	coreLogger.Info("Successfully opened %d files", openedCount)
+	
+	// Give clangd some time to process the files
+	if openedCount > 0 {
+		coreLogger.Info("Waiting 2 seconds for LSP indexing...")
+		time.Sleep(2 * time.Second)
+	}
+	
+	return nil
 }
 
 func newServer(config *config) (*mcpServer, error) {
@@ -106,6 +224,12 @@ func (s *mcpServer) initializeLSP() error {
 func (s *mcpServer) start() error {
 	if err := s.initializeLSP(); err != nil {
 		return err
+	}
+
+	// Pre-open files if patterns are specified to help with LSP indexing
+	if err := s.preopenFiles(); err != nil {
+		coreLogger.Error("Failed to pre-open files: %v", err)
+		// Don't fail startup, just log the error
 	}
 
 	s.mcpServer = server.NewMCPServer(
