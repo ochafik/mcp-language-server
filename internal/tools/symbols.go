@@ -80,6 +80,7 @@ type symbolResult struct {
 	Kind      string
 	Location  string
 	Container string
+	Parent    string
 	Detail    string
 }
 
@@ -134,6 +135,10 @@ func getWorkspaceSymbols(ctx context.Context, client *lsp.Client, query string, 
 }
 
 func flattenDocumentSymbols(docSymbols []protocol.DocumentSymbol, container string, kindFilter map[protocol.SymbolKind]bool) []symbolResult {
+	return flattenDocumentSymbolsWithParent(docSymbols, container, "", kindFilter)
+}
+
+func flattenDocumentSymbolsWithParent(docSymbols []protocol.DocumentSymbol, container string, parent string, kindFilter map[protocol.SymbolKind]bool) []symbolResult {
 	var results []symbolResult
 
 	for _, symbol := range docSymbols {
@@ -152,6 +157,7 @@ func flattenDocumentSymbols(docSymbols []protocol.DocumentSymbol, container stri
 				Kind:      kindName,
 				Location:  location,
 				Container: container,
+				Parent:    parent,
 				Detail:    symbol.Detail,
 			})
 		}
@@ -161,7 +167,7 @@ func flattenDocumentSymbols(docSymbols []protocol.DocumentSymbol, container stri
 			if container != "" {
 				containerName = container + "." + symbol.Name
 			}
-			childResults := flattenDocumentSymbols(symbol.Children, containerName, kindFilter)
+			childResults := flattenDocumentSymbolsWithParent(symbol.Children, containerName, symbol.Name, kindFilter)
 			results = append(results, childResults...)
 		}
 	}
@@ -195,6 +201,7 @@ func convertWorkspaceSymbols(workspaceSymbols []protocol.WorkspaceSymbol, kindFi
 				Kind:      kindName,
 				Location:  location,
 				Container: symbol.ContainerName,
+				Parent:    "",
 				Detail:    "",
 			})
 		}
@@ -223,6 +230,7 @@ func convertSymbolInformation(symbolInfos []protocol.SymbolInformation, kindFilt
 				Kind:      kindName,
 				Location:  location,
 				Container: symbol.ContainerName,
+				Parent:    "",
 				Detail:    "",
 			})
 		}
@@ -305,6 +313,10 @@ func formatSymbolResults(symbols []symbolResult) string {
 		
 		if symbol.Container != "" {
 			output.WriteString(fmt.Sprintf("  Container: %s\n", symbol.Container))
+		}
+		
+		if symbol.Parent != "" {
+			output.WriteString(fmt.Sprintf("  Parent: %s\n", symbol.Parent))
 		}
 		
 		if symbol.Detail != "" {
