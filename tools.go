@@ -366,8 +366,7 @@ func (s *mcpServer) registerTools() error {
 	symbolsTool := mcp.NewTool("symbols",
 		mcp.WithDescription("List symbols from a file or workspace, optionally filtered by symbol types and name pattern."),
 		mcp.WithArray("kinds",
-			mcp.Description("Array of symbol kinds to filter by (e.g. ['Class', 'Function', 'Method'])."),
-			mcp.DefaultValue([]string{"Class", "Interface", "Enum", "Struct", "Function", "Method", "Property", "Field"}),
+			mcp.Description("Array of symbol kinds to filter by (e.g. ['Class', 'Function', 'Method']). If not provided, defaults to ['Class', 'Interface', 'Enum', 'Struct', 'Function', 'Method', 'Property', 'Field']. If empty array, allows all kinds."),
 			mcp.Items(map[string]any{
 				"type": "string",
 				"enum": []string{
@@ -389,7 +388,9 @@ func (s *mcpServer) registerTools() error {
 
 	s.mcpServer.AddTool(symbolsTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		var symbolTypes []string
+		var kindsProvided bool
 		if kindsArg, ok := request.Params.Arguments["kinds"]; ok {
+			kindsProvided = true
 			if kindsArray, ok := kindsArg.([]any); ok {
 				for _, kindItem := range kindsArray {
 					if kindStr, ok := kindItem.(string); ok {

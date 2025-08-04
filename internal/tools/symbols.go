@@ -23,14 +23,26 @@ func GetSymbols(ctx context.Context, client *lsp.Client, symbolTypes []string, f
 	}
 
 	symbolKindFilter := make(map[protocol.SymbolKind]bool)
-	for _, symbolType := range symbolTypes {
-		kind := parseSymbolKind(symbolType)
-		if kind != 0 {
-			symbolKindFilter[kind] = true
+	if len(symbolTypes) == 0 {
+		// No kinds provided or empty array - use defaults
+		defaultTypes := []string{"Class", "Interface", "Enum", "Struct", "Function", "Method", "Property", "Field"}
+		for _, symbolType := range defaultTypes {
+			kind := parseSymbolKind(symbolType)
+			if kind != 0 {
+				symbolKindFilter[kind] = true
+			}
 		}
-	}
-	if len(symbolKindFilter) == 0 {
-		return "", fmt.Errorf("no valid symbol types provided")
+	} else {
+		// Specific kinds provided - filter by them
+		for _, symbolType := range symbolTypes {
+			kind := parseSymbolKind(symbolType)
+			if kind != 0 {
+				symbolKindFilter[kind] = true
+			}
+		}
+		if len(symbolKindFilter) == 0 {
+			return "", fmt.Errorf("no valid symbol types provided")
+		}
 	}
 
 	var symbols []symbolResult
